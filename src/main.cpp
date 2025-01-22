@@ -177,6 +177,9 @@ void handleUserCommands() {
 
         if (command == "exit") {
             running = false;
+            #ifndef _WIN32
+                kill(getpid(), SIGINT);
+            #endif
             break;
         } else if (command == "show") {
             int value = getCounter();
