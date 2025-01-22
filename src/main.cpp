@@ -18,6 +18,8 @@
 
 bool running = true;
 bool childProcessRunning = false;
+bool isLeader = false;
+
 
 pid_t getProcessId() {
 #if defined(_WIN32) || defined(_WIN64)
@@ -66,14 +68,14 @@ void handleEvents(std::time_t &currentSec, int &currentMsec) {
         lastIncrementEventMsec = currentMsec;
     }
 
-    if ((currentSec - lastLogEvent) * 1000 + (currentMsec - lastLogEventMsec) >= 1000) {
+    if (((currentSec - lastLogEvent) * 1000 + (currentMsec - lastLogEventMsec) >= 1000) and (isLeader)) {
         writeToLog("PID: " + std::to_string(pid) +
                    ", Current counter value: " + std::to_string(getCounter()));
         lastLogEvent = currentSec; 
         lastLogEventMsec = currentMsec;
     }
 
-    if ((currentSec - lastChildEvent) * 1000 + (currentMsec - lastChildEventMsec) >= 3000) {
+    if (((currentSec - lastChildEvent) * 1000 + (currentMsec - lastChildEventMsec) >= 3000) and (isLeader)) {
         if (!childProcessRunning) {
             writeToLog("PID: " + std::to_string(pid) +
                        " - Launching child processes...");
@@ -190,10 +192,63 @@ DWORD WINAPI CommandThread(LPVOID lpParam) {
 }
 #endif
 
+void handleSignals(int signal) {
+    running = false;
+    if (isLeader) {
+        setIsLeader(false); 
+    }
+}
+
+void setupSignalHandlers() {
+#if !defined(_WIN32) && !defined(_WIN64)
+    struct sigaction sa;
+    sa.sa_handler = handleSignals;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+#endif
+}
+
+bool isLeaderAlive(pid_t leaderPID) {
+#ifdef _WIN32
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, leaderPID);
+    if (hProcess == NULL) {
+        return false; 
+    }
+    CloseHandle(hProcess);
+    return true;
+#else
+    return (kill(leaderPID, 0) == 0); 
+#endif
+}
+
+void checkAndReassignLeadership() {
+    bool leadershipChanged = false;
+
+    if (!isLeaderAlive(getLeaderPID())) {
+        setLeaderPID(getProcessId());
+        setIsLeader(true);
+        isLeader = true;
+        leadershipChanged = true;
+        std::cout << "Process " << getProcessId() << " became the new leader." << std::endl;
+    }
+
+    if (leadershipChanged) {
+        writeToLog("Process " + std::to_string(getProcessId()) + " took over leadership.");
+    }
+}
+
 int main() {
-    createSharedMemory(true);
-    
+    createSharedMemory(true, getProcessId());
+
+    if (!getIsLeader()) {
+        setIsLeader(true);
+        isLeader = true;
+    }
+
     setCounter(0);
+    setupSignalHandlers();
 
     std::time_t currentSec;
     int currentMsec;
@@ -210,7 +265,7 @@ int main() {
         &threadId
     );
     if (userCommandThread == NULL) {
-        std::cerr << "Error creating process for handling user commands." << std::endl;
+        std::cerr << "Error creating thread for handling user commands." << std::endl;
         return 1;
     }
 #else
@@ -226,13 +281,18 @@ int main() {
 
     while (running) {
         getCurrentTime(currentSec, currentMsec);
+        checkAndReassignLeadership();
         handleEvents(currentSec, currentMsec);
 
 #if defined(_WIN32) || defined(_WIN64)
         Sleep(100); 
 #else
-        pause();
+        usleep(100000);
 #endif
+    }
+
+    if (isLeader) {
+        setIsLeader(false);
     }
 
 #if defined(_WIN32) || defined(_WIN64)
