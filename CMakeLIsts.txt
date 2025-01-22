@@ -27,6 +27,6 @@ add_executable(child_program_2
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
 
-if(MSVC OR CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mconsole")
 endif()
