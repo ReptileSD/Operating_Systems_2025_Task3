@@ -128,20 +128,35 @@ void handleEvents(std::time_t &currentSec, int &currentMsec) {
 
             #else
             pid_t pid1 = fork();
-            if (pid1 == 0) {
-                execlp("child_program_1", "child_program_1", (char*)NULL);
-                exit(1);
+            if (pid1 == -1) {
+                std::cerr << "Fork failed for child program 1" << std::endl;
+            } else if (pid1 == 0) {
+                std::cout << "Launching child program 1..." << std::endl;
+                if (execlp("child_program_1", "child_program_1", (char*)NULL) == -1) {
+                    perror("Execlp failed for child program 1");
+                    exit(1);
+                }
             }
 
             pid_t pid2 = fork();
-            if (pid2 == 0) {
-                execlp("child_program_2", "child_program_2", (char*)NULL);
-                exit(1);
+            if (pid2 == -1) {
+                std::cerr << "Fork failed for child program 2" << std::endl;
+            } else if (pid2 == 0) {
+                std::cout << "Launching child program 2..." << std::endl;
+                if (execlp("child_program_2", "child_program_2", (char*)NULL) == -1) {
+                    perror("Execlp failed for child program 2");
+                    exit(1);
+                }
             }
 
             int status;
-            waitpid(pid1, &status, 0);
-            waitpid(pid2, &status, 0);
+            if (pid1 > 0) {
+                waitpid(pid1, &status, 0);
+            }
+            if (pid2 > 0) {
+                waitpid(pid2, &status, 0);  
+            }
+
             #endif
             childProcessRunning = false;
         } else {
