@@ -132,7 +132,7 @@ void handleEvents(std::time_t &currentSec, int &currentMsec) {
                 std::cerr << "Fork failed for child program 1" << std::endl;
             } else if (pid1 == 0) {
                 std::cout << "Launching child program 1..." << std::endl;
-                if (execlp("child_program_1", "child_program_1", (char*)NULL) == -1) {
+                if (execlp("./child_program_1", "child_program_1", (char*)NULL) == -1) {
                     perror("Execlp failed for child program 1");
                     exit(1);
                 }
@@ -143,7 +143,7 @@ void handleEvents(std::time_t &currentSec, int &currentMsec) {
                 std::cerr << "Fork failed for child program 2" << std::endl;
             } else if (pid2 == 0) {
                 std::cout << "Launching child program 2..." << std::endl;
-                if (execlp("child_program_2", "child_program_2", (char*)NULL) == -1) {
+                if (execlp("./child_program_2", "child_program_2", (char*)NULL) == -1) {
                     perror("Execlp failed for child program 2");
                     exit(1);
                 }
