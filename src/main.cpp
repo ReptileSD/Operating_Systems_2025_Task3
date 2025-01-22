@@ -169,7 +169,7 @@ void handleEvents(std::time_t &currentSec, int &currentMsec) {
 
 
 
-void handleUserCommands() {
+void handleUserCommands(pid_t pid=NULL) {
     std::string command;
     while (running) {
         std::cout << "Enter command (show, reset, set <value>, exit): ";
@@ -178,7 +178,7 @@ void handleUserCommands() {
         if (command == "exit") {
             running = false;
             #ifndef _WIN32
-                kill(getpid(), SIGINT);
+                kill(pid, SIGINT);
             #endif
             break;
         } else if (command == "show") {
@@ -292,7 +292,7 @@ int main() {
         std::cerr << "Error creating child process for handling user commands." << std::endl;
         return 1;
     } else if (pid == 0) {
-        handleUserCommands();
+        handleUserCommands(getProcessId());
         exit(0);
     }
 #endif
