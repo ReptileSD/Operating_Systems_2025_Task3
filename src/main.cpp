@@ -247,6 +247,7 @@ bool isLeaderAlive(pid_t leaderPID) {
 void checkAndReassignLeadership() {
     bool leadershipChanged = false;
     std::cout << getLeaderPID() << "\n";
+    std::cout << getProcessId() << "\n";
 
     if (!isLeaderAlive(getLeaderPID())) {
         setLeaderPID(getProcessId());
