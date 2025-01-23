@@ -263,6 +263,7 @@ void checkAndReassignLeadership() {
 }
 
 int main() {
+    std::cout << "Current process PID: " << getProcessId() << std::endl;
     createSharedMemory(true, getProcessId());
 
     if (!getIsLeader()) {

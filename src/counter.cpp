@@ -89,6 +89,7 @@ if (isFirstProcess) {
     sharedMemory->counter = 0;
     sharedMemory->isLeader = false;
     sharedMemory->leaderPID = ProcessID;
+    std::cout << "Leader PID initialized to: " << ProcessID << std::endl; // Отладка
 }
 
 close(fd);
