@@ -172,17 +172,17 @@ void handleEvents(std::time_t &currentSec, int &currentMsec) {
 void handleUserCommands(pid_t pid = -1) {
     std::string command;
     while (running) {
+        #ifdef _WIN32
         std::cout << "Enter command (show, reset, set <value>, exit): ";
+        #else
+        std::cout << "Enter command (show, reset, set <value>, ctrl+C for exit): ";
+        #endif
         std::cin >> command;
-
         if (command == "exit") {
+        #ifdef _WIN32
             running = false;
-
-            if (pid > 0) { 
-                kill(pid, SIGTERM); 
-            }
-
             break;
+        #endif
         } else if (command == "show") {
             int value = getCounter();
             std::cout << "Current counter value: " << value << std::endl;
