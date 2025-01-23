@@ -169,7 +169,7 @@ void handleEvents(std::time_t &currentSec, int &currentMsec) {
 
 
 
-void handleUserCommands(pid_t pid=NULL) {
+void handleUserCommands(pid_t pid = -1) {
     std::string command;
     while (running) {
         std::cout << "Enter command (show, reset, set <value>, exit): ";
@@ -177,9 +177,11 @@ void handleUserCommands(pid_t pid=NULL) {
 
         if (command == "exit") {
             running = false;
-            #ifndef _WIN32
-                kill(pid, SIGINT);
-            #endif
+
+            if (pid > 0) { 
+                kill(pid, SIGTERM); 
+            }
+
             break;
         } else if (command == "show") {
             int value = getCounter();
@@ -211,10 +213,11 @@ DWORD WINAPI CommandThread(LPVOID lpParam) {
 #endif
 
 void handleSignals(int signal) {
-    running = false;
+    running = false; 
     if (isLeader) {
-        setIsLeader(false); 
+        setIsLeader(false);
     }
+    exit(0); 
 }
 
 void setupSignalHandlers() {
@@ -292,7 +295,7 @@ int main() {
         std::cerr << "Error creating child process for handling user commands." << std::endl;
         return 1;
     } else if (pid == 0) {
-        handleUserCommands(getProcessId());
+        handleUserCommands(getpid());
         exit(0);
     }
 #endif
@@ -318,7 +321,7 @@ int main() {
     CloseHandle(userCommandThread);
 #else
     int status;
-    waitpid(pid, &status, 0);
+    waitpid(pid, &status, 0); 
 #endif
 
     destroySharedMemory();
