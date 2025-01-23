@@ -214,9 +214,19 @@ DWORD WINAPI CommandThread(LPVOID lpParam) {
 
 void handleSignals(int signal) {
     running = false; 
-    if (isLeader) {
+        if (isLeader) {
         setIsLeader(false);
     }
+
+#if defined(_WIN32) || defined(_WIN64)
+    WaitForSingleObject(userCommandThread, INFINITE);
+    CloseHandle(userCommandThread);
+#else
+    int status;
+    waitpid(pid, &status, 0); 
+#endif
+
+    destroySharedMemory();
     exit(0); 
 }
 
@@ -314,20 +324,6 @@ int main() {
         usleep(100000);
 #endif
     }
-
-    if (isLeader) {
-        setIsLeader(false);
-    }
-
-#if defined(_WIN32) || defined(_WIN64)
-    WaitForSingleObject(userCommandThread, INFINITE);
-    CloseHandle(userCommandThread);
-#else
-    int status;
-    waitpid(pid, &status, 0); 
-#endif
-
-    destroySharedMemory();
 
     return 0;
 }
