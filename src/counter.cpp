@@ -59,7 +59,7 @@ void createSharedMemory(bool initialize = false, pid_t ProcessID = NULL) {
     }
 #else
 int fd = shm_open(SHARED_MEMORY_NAME, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
-bool isFirstProcess = (fd != -1);
+bool isFirstProcess = ((fd != -1) and initialize);
 
 if (!isFirstProcess) {
     fd = shm_open(SHARED_MEMORY_NAME, O_RDWR, S_IRUSR | S_IWUSR);
