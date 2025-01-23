@@ -7,6 +7,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <errno.h>
 #endif
 
 #define SHARED_MEMORY_NAME "CounterSharedMemory"
@@ -110,6 +111,7 @@ void destroySharedMemory() {
 
     if (shm_unlink(SHARED_MEMORY_NAME) == -1) {
         std::cerr << "Failed to unlink shared memory." << std::endl;
+        std::cerr << errno;
     }
 #endif
 }
