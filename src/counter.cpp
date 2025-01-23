@@ -111,7 +111,8 @@ void destroySharedMemory() {
 
     if (shm_unlink(SHARED_MEMORY_NAME) == -1) {
         std::cerr << "Failed to unlink shared memory." << std::endl;
-        std::cerr << errno;
+        if (errno == EACCES){
+        std::cerr << "EACCES";}
     }
 #endif
 }
