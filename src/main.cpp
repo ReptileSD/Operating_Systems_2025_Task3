@@ -218,6 +218,9 @@ void handleSignals(int signal) {
         setIsLeader(false);
     }
 
+destroySharedMemory();
+
+
 #if defined(_WIN32) || defined(_WIN64)
     WaitForSingleObject(userCommandThread, INFINITE);
     CloseHandle(userCommandThread);
@@ -226,7 +229,6 @@ void handleSignals(int signal) {
     waitpid(pid, &status, 0); 
 #endif
 
-    destroySharedMemory();
     exit(0); 
 }
 
