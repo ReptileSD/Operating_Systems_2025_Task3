@@ -88,7 +88,7 @@ if (sharedMemory == MAP_FAILED) {
 if (isFirstProcess) {
     sharedMemory->counter = 0;
     sharedMemory->isLeader = false;
-    sharedMemory->leaderPID = 0;
+    sharedMemory->leaderPID = ProcessID;
 }
 
 close(fd);
