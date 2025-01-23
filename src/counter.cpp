@@ -57,33 +57,42 @@ void createSharedMemory(bool initialize = false, pid_t ProcessID = NULL) {
         ReleaseSemaphore(hSemaphore, 1, NULL);
     }
 #else
-    int fd = shm_open(SHARED_MEMORY_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+int fd = shm_open(SHARED_MEMORY_NAME, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
+bool isFirstProcess = (fd != -1);
+
+if (!isFirstProcess) {
+    fd = shm_open(SHARED_MEMORY_NAME, O_RDWR, S_IRUSR | S_IWUSR);
     if (fd == -1) {
-        std::cerr << "Failed to create or open shared memory." << std::endl;
+        std::cerr << "Failed to open existing shared memory." << std::endl;
         exit(1);
     }
+}
 
-    bool isFirstProcess = (errno != EEXIST);
-
-    if (isFirstProcess) {
-        if (ftruncate(fd, SHARED_MEMORY_SIZE) == -1) {
-            std::cerr << "Failed to set size for shared memory." << std::endl;
-            exit(1);
-        }
-    }
-
-    sharedMemory = (SharedMemory *)mmap(NULL, SHARED_MEMORY_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (sharedMemory == MAP_FAILED) {
-        std::cerr << "Failed to map shared memory." << std::endl;
+if (isFirstProcess) {
+    if (ftruncate(fd, SHARED_MEMORY_SIZE) == -1) {
+        std::cerr << "Failed to set size for shared memory." << std::endl;
+        shm_unlink(SHARED_MEMORY_NAME);
         exit(1);
     }
+}
 
+sharedMemory = (SharedMemory *)mmap(NULL, SHARED_MEMORY_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+if (sharedMemory == MAP_FAILED) {
+    std::cerr << "Failed to map shared memory." << std::endl;
     if (isFirstProcess) {
-        sharedMemory->counter = 0;
-        sharedMemory->isLeader = false;
+        shm_unlink(SHARED_MEMORY_NAME);
     }
+    exit(1);
+}
 
-    close(fd);
+if (isFirstProcess) {
+    sharedMemory->counter = 0;
+    sharedMemory->isLeader = false;
+    sharedMemory->leaderPID = 0;
+}
+
+close(fd);
+
 #endif
 }
 
