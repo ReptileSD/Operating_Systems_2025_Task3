@@ -19,7 +19,7 @@
 bool running = true;
 bool childProcessRunning = false;
 bool isLeader = false;
-
+pid_t pid = NULL;
 
 pid_t getProcessId() {
 #if defined(_WIN32) || defined(_WIN64)
